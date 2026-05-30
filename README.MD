@@ -1,13 +1,13 @@
-Hello! My name is JT Pyle and I am a student at BYU and I have taken part in a palethora of projects!
+# Hello! My name is JT Pyle and I am a student at BYU and I have taken part in a palethora of projects!
 
-## [My skills stem from a ample planning and preperation that makes programs that are created for dynamic and agile uses. ]
+### [My skills stem from a ample planning and preperation that makes programs that are created for dynamic and agile uses. ]
 
 These skills include and are not limited to: <br>
 -Various typescript frameworks such as React and Angular. <br>
 -Backend Languages: C#, Python, JavaScript, and Typescript <br>
 -Strong Web development Fundamental understanding using: HTML CSS and Javasctipt <br>
 
-## [Projects I have been a part of]
+### [Projects I have been a part of]
 
 -Legacy Football App: Individual when I started appling HTML CSS and JS fundamentals in my projects. <br>
 -HandCraft Haven: Group Project & My intoruction to React and Next JS. I helped architect the project and i built the back end functionality made admin and role permissions. <br>
