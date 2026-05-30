@@ -1,0 +1,236 @@
+@page "/memorize"
+@rendermode InteractiveServer
+@inject ScriptureService ScriptureService
+@inject AuthUiService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Memorize</PageTitle>
+
+<div class="dashboard-page">
+    <section class="card dashboard-hero">
+        <div>
+            <p class="landing-eyebrow">Memorize</p>
+            <h1>Strengthen recall through repetition</h1>
+            <p class="helper-text">
+                Choose a saved verse, read it carefully, and then type it from memory to deepen retention.
+            </p>
+        </div>
+
+        <div class="dashboard-actions">
+            <a class="btn" href="/dashboard">Open Dashboard</a>
+            <a class="btn primary" href="/practice">Quick Practice</a>
+        </div>
+    </section>
+
+    @if (selectedScripture is null)
+    {
+        <section class="card">
+            <div class="dashboard-card-header">
+                <div>
+                    <p class="landing-eyebrow">Select a verse</p>
+                    <h2>Pick a scripture to memorize</h2>
+                </div>
+
+                <span class="status-chip info">@scriptures.Count available</span>
+            </div>
+
+            @if (scriptures.Count == 0)
+            {
+                <div class="empty-state">
+                    <p>No scriptures available yet. Add some on the Scriptures page first.</p>
+                    <div class="landing-actions">
+                        <a class="btn primary" href="/scriptures">Go to Scriptures</a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <ul class="scripture-list">
+                    @foreach (var scripture in scriptures)
+                    {
+                        <li class="scripture-item">
+                            <div class="scripture-item-top">
+                                <div>
+                                    <p class="scripture-reference">@scripture.Reference</p>
+                                    <p class="scripture-topic">@scripture.Book @scripture.Chapter:@scripture.VerseNumber</p>
+                                </div>
+
+                                <span class="status-chip @(scripture.IsMemorized ? "success" : "info")">
+                                    @(scripture.IsMemorized ? "Memorized" : "Ready")
+                                </span>
+                            </div>
+
+                            <p>@scripture.Text</p>
+
+                            <div class="button-row">
+                                <button type="button" class="btn primary" @onclick="() => SelectScripture(scripture)">Memorize
+                                    This</button>
+                                    <button type="button" class="btn danger"
+                                            @onclick="() => DeleteScripture(scripture.Id)">Delete</button>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+        }
+    else
+        {
+            <section class="card memorize-card dashboard-focus-card">
+                <div class="dashboard-card-header">
+                    <div>
+                        <p class="landing-eyebrow">Memorization focus</p>
+                        <h2>@selectedScripture.Reference</h2>
+                    </div>
+
+                    <span class="status-chip @(selectedScripture.IsMemorized ? "success" : "info")">
+                        @(selectedScripture.IsMemorized ? "Memorized" : "In Progress")
+                    </span>
+                </div>
+
+                <div class="list-meta">
+                    <span>Attempts: @selectedScripture.PracticeCount</span>
+                    <span>Streak: @selectedScripture.CurrentStreakDays day(s)</span>
+                </div>
+
+                @if (!gameStarted)
+                {
+                    <div class="practice-text">
+                        <p>@selectedScripture.Text</p>
+                    </div>
+                    <p class="dashboard-note">Read the scripture above, then start when you are ready to type it from memory.</p>
+                    <div class="button-row">
+                        <button type="button" class="btn primary" @onclick="StartGame">Start Game</button>
+                        <button type="button" class="btn" @onclick="BackToList">Back</button>
+                        <button type="button" class="btn danger"
+                                @onclick="() => DeleteScripture(selectedScripture.Id)">Delete</button>
+                    </div>
+                }
+                else
+                {
+                    <p>Type the scripture from memory:</p>
+
+                    <div class="form-field">
+                        <textarea class="input textarea" @bind="userAttempt" disabled="@gameChecked"></textarea>
+                    </div>
+
+                    <div class="button-row">
+                        @if (!gameChecked)
+                        {
+                            <button type="button" class="btn primary" @onclick="CheckAttempt">Check</button>
+                            <button type="button" class="btn" @onclick="StartGame">Reset</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn primary" @onclick="StartGame">Try Again</button>
+                            <button type="button" class="btn" @onclick="() => SelectScripture(selectedScripture)">Read Again</button>
+                        }
+                        <button type="button" class="btn" @onclick="BackToList">Back</button>
+                        <button type="button" class="btn danger"
+                                @onclick="() => DeleteScripture(selectedScripture.Id)">Delete</button>
+                    </div>
+
+                    @if (gameChecked)
+                    {
+                        <div class="memorize-result @(isCorrect ? "result-correct" : "result-incorrect")">
+                            <p>@(isCorrect ? "You got it right!" : "Not quite. Keep practicing!")</p>
+                        </div>
+                    }
+                }
+            </section>
+        }
+    </div>
+
+@code {
+    private List<Scripture> scriptures = [];
+    private Scripture? selectedScripture;
+    private bool gameStarted;
+    private bool gameChecked;
+    private bool isCorrect;
+    private string userAttempt = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // The memorization flow is private to signed-in users, so send guests back through sign-in first.
+        if (!AuthService.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/signin");
+            return;
+        }
+
+        await RefreshScripturesAsync();
+    }
+
+    private void SelectScripture(Scripture scripture)
+    {
+        selectedScripture = scripture;
+        gameStarted = false;
+        gameChecked = false;
+        userAttempt = string.Empty;
+    }
+
+    private void StartGame()
+    {
+        gameStarted = true;
+        gameChecked = false;
+        isCorrect = false;
+        userAttempt = string.Empty;
+    }
+
+    private async Task CheckAttempt()
+    {
+        if (selectedScripture is null)
+        {
+            return;
+        }
+
+        var expected = NormalizeText(selectedScripture.Text);
+        var actual = NormalizeText(userAttempt);
+        isCorrect = string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase);
+        gameChecked = true;
+
+        await ScriptureService.RecordPracticeAsync(selectedScripture.Id, isCorrect);
+        if (isCorrect)
+        {
+            await ScriptureService.SetMemorizedAsync(selectedScripture.Id, true);
+        }
+
+        selectedScripture = await ScriptureService.GetByIdAsync(selectedScripture.Id) ?? selectedScripture;
+        await RefreshScripturesAsync();
+    }
+
+    private async Task BackToList()
+    {
+        selectedScripture = null;
+        gameStarted = false;
+        gameChecked = false;
+        userAttempt = string.Empty;
+        await RefreshScripturesAsync();
+    }
+
+    private static string NormalizeText(string text)
+    {
+        return text.Trim().Replace("\r\n", " ").Replace("\n", " ").Replace("  ", " ");
+    }
+
+    private async Task DeleteScripture(Guid id)
+    {
+        await ScriptureService.DeleteAsync(id);
+
+        if (selectedScripture?.Id == id)
+        {
+            selectedScripture = null;
+            gameStarted = false;
+            gameChecked = false;
+            isCorrect = false;
+            userAttempt = string.Empty;
+        }
+
+        await RefreshScripturesAsync();
+    }
+
+    private async Task RefreshScripturesAsync()
+    {
+        scriptures = (await ScriptureService.GetAllAsync()).ToList();
+    }
+}

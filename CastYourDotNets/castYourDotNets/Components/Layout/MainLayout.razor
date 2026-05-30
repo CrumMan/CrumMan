@@ -1,0 +1,36 @@
+@inherits LayoutComponentBase
+
+<div class="app-shell @(isDarkTheme ? "theme-dark" : string.Empty)">
+    <button type="button"
+            class="theme-toggle @(isDarkTheme ? "is-dark" : string.Empty)"
+            @onclick="ToggleTheme"
+            aria-label="Toggle color theme">
+        <span class="theme-toggle-track">
+            <span class="theme-toggle-background theme-toggle-background-day"></span>
+            <span class="theme-toggle-background theme-toggle-background-night"></span>
+            <span class="theme-toggle-thumb">
+                <span class="theme-toggle-icon theme-toggle-icon-sun"></span>
+                <span class="theme-toggle-icon theme-toggle-icon-moon"></span>
+            </span>
+        </span>
+    </button>
+
+    <div class="app-layout">
+        <aside class="app-nav">
+            <NavMenu />
+        </aside>
+
+        <main class="app-main">
+            @Body
+        </main>
+    </div>
+</div>
+
+@code {
+    private bool isDarkTheme;
+
+    private void ToggleTheme()
+    {
+        isDarkTheme = !isDarkTheme;
+    }
+}
