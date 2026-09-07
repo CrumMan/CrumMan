@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import postgres from 'postgres';
 import { error } from 'console';
-const sql = postgres(process.env.POSTGRES_NETLIFY_URL!, {ssl: 'require'});
+const sql = postgres(process.env.DATABASE_URL!, {ssl: 'require'});
 
 async function getKeywordById(id: number) {
     try{
@@ -9,19 +9,6 @@ async function getKeywordById(id: number) {
         SELECT id,keyword,synonyms
         FROM keyword
         where id = ${id}
-        `;
-        return keyword[0]||null;
-    }
-    catch(error){
-        console.error("Error:", error)
-        return null;
-    }
-}
-async function getAllKeyword() {
-    try{
-        const keyword = await sql`
-        SELECT id,keyword,synonyms
-        FROM keyword
         `;
         return keyword||null;
     }

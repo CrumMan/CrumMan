@@ -6,8 +6,8 @@ import {
   requireAdmin,
   serverError,
 } from "../../../lib/api-helpers";
-import { deleteKeywordById } from "../../../lib/server-functions/keyword-table-functions/keyword-delete";
-import { updateKeywordById } from "../../../lib/server-functions/keyword-table-functions/keyword-update";
+import { deleteKeywordById } from "../../../lib/server-functions/keyword-delete";
+import { updateKeywordById } from "../../../lib/server-functions/keyword-update";
 
 export const dynamic = "force-dynamic";
 

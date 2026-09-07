@@ -5,7 +5,7 @@ import {
   requireAdmin,
   serverError,
 } from "../../lib/api-helpers";
-import { createKeywordWithSynonyms } from "../../lib/server-functions/keyword-table-functions/keyword-create";
+import { createKeywordWithSynonyms } from "../../lib/server-functions/keyword-create";
 
 export const dynamic = "force-dynamic";
 

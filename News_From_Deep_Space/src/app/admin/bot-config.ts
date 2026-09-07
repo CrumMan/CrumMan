@@ -22,6 +22,7 @@ export type Combination = {
 export type Account = {
   id: string;
   username: string;
+  email:string;
   streak: number;
   isAdmin: boolean;
 };
@@ -52,7 +53,8 @@ export function saveSession(token: string, account: Account): void {
   window.localStorage.setItem(TOKEN_STORAGE_KEY, token);
   window.localStorage.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify(account));
   window.localStorage.setItem("isLoggedIn", "true");
-  window.localStorage.setItem("userEmail", account.username);
+  window.localStorage.setItem("username", account.username);
+  window.localStorage.setItem("email", account.email);
   window.dispatchEvent(new Event("authChange"));
 }
 
@@ -61,7 +63,8 @@ export function clearSession(): void {
   window.localStorage.removeItem(TOKEN_STORAGE_KEY);
   window.localStorage.removeItem(ACCOUNT_STORAGE_KEY);
   window.localStorage.removeItem("isLoggedIn");
-  window.localStorage.removeItem("userEmail");
+  window.localStorage.removeItem("username");
+  window.localStorage.removeItem("email");
   window.dispatchEvent(new Event("authChange"));
 }
 
@@ -164,6 +167,13 @@ export async function deleteCombinationsByKeyword(
     `/api/combinations/by-keyword/${keywordId}`,
     { method: "DELETE" },
   );
+}
+
+export async function updateAccountProfile(
+  id: string,
+  input: { username?: string; email?: string },
+): Promise<Account> {
+  return apiFetch<Account>(`/api/accounts/${id}`, { method: "PUT", body: input });
 }
 
 export function loadFallback(): string {
